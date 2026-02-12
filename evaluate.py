@@ -15,8 +15,14 @@ from utils.visualize import save_triplet_grid
 from utils.evaluator import evaluate_loader
 from utils.device import get_device
 
+CHECKPOINT_PATH = "/content/drive/MyDrive/FaceRestore/checkpoint.pth"
+
+
 
 def main():
+    os.makedirs(os.path.dirname(CHECKPOINT_PATH), exist_ok=True)
+    os.makedirs(config.RESULTS_DIR, exist_ok=True)
+
     parser = argparse.ArgumentParser(description="Evaluate face restoration model")
     parser.add_argument(
         "--no-checkpoint",
@@ -105,8 +111,6 @@ def main():
         )
 
     # Visualize: degraded | restored | ground truth
-    os.makedirs(config.RESULTS_DIR, exist_ok=True)
-
     degraded, gt = next(iter(val_loader))
     degraded = degraded.to(device)
     gt = gt.to(device)

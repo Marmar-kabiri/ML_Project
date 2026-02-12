@@ -12,12 +12,13 @@ from dataset.face_dataset import FaceDataset
 from models.unet import UNet
 from losses.losees import get_loss, get_identity_loss
 from utils.device import get_device
-CHECKPOINT_PATH = "/content/drive/MyDrive/ML_Project/checkpoint.pth"
+CHECKPOINT_PATH = "/content/drive/MyDrive/FaceRestore/checkpoint.pth"
+
 
 
 
 def save_curves(train_losses: list[float], val_losses: list[float], show_in_notebook: bool = False) -> None:
-    os.makedirs(config.RESULTS_DIR, exist_ok=True)
+
     path = os.path.join(config.RESULTS_DIR, "loss_curve.png")
     plt.figure()
     plt.plot(train_losses, label="Train L1 Loss")
@@ -47,6 +48,9 @@ def compute_l1_loss(model, loader, criterion, device):
 
 
 def main():
+    os.makedirs(os.path.dirname(CHECKPOINT_PATH), exist_ok=True)
+    os.makedirs(config.RESULTS_DIR, exist_ok=True)
+
     device = get_device()
 
     use_align = getattr(config, "USE_ALIGNMENT", False)
