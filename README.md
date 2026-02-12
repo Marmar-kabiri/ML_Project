@@ -48,10 +48,12 @@ This creates `data/train`, `data/val`, and `data/test` and **copies** images int
    - `data/test/`
 3. Use any split you like (e.g. 80/10/10); the code does not care about the ratio.
 
-### Generalization (optional)
+### Generalization (required by project spec)
 
-- Put images from a **different** face dataset (e.g. LFW, or another subset) in **`data/test_other/`**.
-- The evaluation notebook will run metrics on this folder if it exists, to report generalization.
+- The spec requires testing on **another arbitrary face dataset** to assess generalization.
+- Create **`data/test_other/`** and put face images from a **different** source (e.g. [LFW](http://vis-www.cs.umass.edu/lfw/), or any other face dataset not from CelebA).
+- You can use the same extensions as above (e.g. `.jpg`). No subfolders needed — all images directly in `data/test_other/`.
+- Then run `evaluate.py` (or `evaluate.ipynb`); it will print **"Other (generalization) — PSNR: ... | SSIM: ..."** when that folder exists.
 
 ## Quick start
 

@@ -31,10 +31,7 @@ def main():
     model_path = config.MODEL_PATH
     if not os.path.isfile(model_path):
         if args.no_checkpoint:
-            print(
-                "Warning: '{}' not found. Using untrained model — metrics will be poor, but triplet images will be saved.".format(
-                    model_path
-                )
+            print("Warning: '{}' not found. Using untrained model — metrics will be poor, but triplet images will be saved.".format(model_path))
         else:
             print("Error: trained model not found at '{}'.".format(model_path))
             print("In Colab you can either:")
