@@ -2,7 +2,9 @@
 Evaluation script: load best model, compute PSNR/SSIM/embed on val & test,
 optionally on another dataset, and save triplet visualizations.
 """
+import argparse
 import os
+import sys
 import torch
 from torch.utils.data import DataLoader
 
@@ -15,10 +17,34 @@ from utils.device import get_device
 
 
 def main():
-    # Load best model
+    parser = argparse.ArgumentParser(description="Evaluate face restoration model")
+    parser.add_argument(
+        "--no-checkpoint",
+        action="store_true",
+        help="Run without loading model.pth (untrained model). Use to get triplet images when no checkpoint exists (e.g. in Colab before training).",
+    )
+    args = parser.parse_args()
+
     device = get_device()
     model = UNet().to(device)
-    model.load_state_dict(torch.load(config.MODEL_PATH, map_location=device))
+
+    model_path = config.MODEL_PATH
+    if not os.path.isfile(model_path):
+        if args.no_checkpoint:
+            print(
+                "Warning: '{}' not found. Using untrained model — metrics will be poor, but triplet images will be saved.".format(
+                    model_path
+                )
+        else:
+            print("Error: trained model not found at '{}'.".format(model_path))
+            print("In Colab you can either:")
+            print("  1. Train first: run train.py (or your training notebook), then run evaluate.py again.")
+            print("  2. Upload model.pth to this project folder (e.g. drag & drop in Colab file browser).")
+            print("  3. Run with untrained model to still get image output: python evaluate.py --no-checkpoint")
+            sys.exit(1)
+    else:
+        model.load_state_dict(torch.load(model_path, map_location=device))
+
     model.eval()
 
     use_align = getattr(config, "USE_ALIGNMENT", False)
