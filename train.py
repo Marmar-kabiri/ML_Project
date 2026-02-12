@@ -12,17 +12,26 @@ from dataset.face_dataset import FaceDataset
 from models.unet import UNet
 from losses.losees import get_loss, get_identity_loss
 from utils.device import get_device
+CHECKPOINT_PATH = "/content/drive/MyDrive/ML_Project/checkpoint.pth"
 
 
-def save_curves(train_losses: list[float], val_losses: list[float]) -> None:
+
+def save_curves(train_losses: list[float], val_losses: list[float], show_in_notebook: bool = False) -> None:
     os.makedirs(config.RESULTS_DIR, exist_ok=True)
+    path = os.path.join(config.RESULTS_DIR, "loss_curve.png")
     plt.figure()
     plt.plot(train_losses, label="Train L1 Loss")
     plt.plot(val_losses, label="Val L1 Loss")
     plt.legend()
     plt.xlabel("Epoch")
-    plt.savefig(os.path.join(config.RESULTS_DIR, "loss_curve.png"))
+    plt.savefig(path)
     plt.close()
+    if show_in_notebook:
+        try:
+            from IPython.display import Image, display
+            display(Image(filename=path))
+        except Exception:
+            pass
 
 
 @torch.no_grad()
@@ -65,14 +74,25 @@ def main():
         get_identity_loss(device) if getattr(config, "USE_IDENTITY_LOSS", False) else None
     )
 
+    start_epoch = 0
     best_loss = float("inf")
+
+    if os.path.exists(CHECKPOINT_PATH):
+        print("Checkpoint found. Resuming training...")
+        checkpoint = torch.load(CHECKPOINT_PATH, map_location=device)
+        model.load_state_dict(checkpoint["model"])
+        optimizer.load_state_dict(checkpoint["optimizer"])
+        start_epoch = checkpoint["epoch"] + 1
+        best_loss = checkpoint["best_loss"]
+        print(f"Resuming from epoch {start_epoch}")
+
     train_losses = []
     val_losses = []
 
     patience = getattr(config, "EARLY_STOPPING_PATIENCE", 5)
     epochs_no_improve = 0
 
-    for epoch in range(config.EPOCHS):
+    for epoch in range(start_epoch, config.EPOCHS):
         model.train()
         epoch_loss = 0.0
 
@@ -105,7 +125,15 @@ def main():
 
         if val_loss_epoch < best_loss:
             best_loss = val_loss_epoch
+            torch.save({
+                "epoch": epoch,
+                "model": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "best_loss": best_loss
+            }, CHECKPOINT_PATH)
+            # So evaluate.ipynb can load with config.MODEL_PATH
             torch.save(model.state_dict(), config.MODEL_PATH)
+
             print("Best model saved.")
             epochs_no_improve = 0
         else:
@@ -117,7 +145,7 @@ def main():
 
         save_curves(train_losses, val_losses)
 
-    save_curves(train_losses, val_losses)
+    save_curves(train_losses, val_losses, show_in_notebook=True)
     print("Training finished.")
 
 
